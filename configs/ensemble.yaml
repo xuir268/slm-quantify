@@ -1,0 +1,22 @@
+models:
+  - id: microsoft/phi-3-mini-4k-instruct
+    name: phi3
+    adapter: results/models/phi3_lora/adapter   # "" if none
+  - id: Qwen/Qwen2-3B-Instruct
+    name: qwen3b
+    adapter: results/models/qwen3_lora/adapter
+  - id: google/gemma-2-2b-it
+    name: gemma2b
+    adapter: results/models/gemma2_lora/adapter
+
+rag:
+  top_k: 3
+  max_bullets: 6
+
+verifier:
+  threshold: 0.62  # escalate if below
+
+policy:
+  mode: cascade    # router | cascade | ensemble
+  order: [phi3, qwen3b, gemma2b]  # cheap -> strong
+  ensemble_size: 2                 # how many to run in parallel if mode=ensemble

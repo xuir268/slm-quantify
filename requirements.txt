@@ -1,0 +1,4 @@
+pandas
+datasets
+tqdm
+python-slugify
