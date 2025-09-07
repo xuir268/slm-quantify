@@ -47,7 +47,12 @@ def load_model(model_id:str, adapter_dir:Optional[str]=None, device:str="auto", 
             bnb_4bit_use_double_quant=True,
         )
     else:
-        torch_dtype = torch.float16 if device == "cuda" else torch.bfloat16
+        if device == "cuda":
+            torch_dtype = torch.bfloat16
+        elif device == "mps":
+            torch_dtype = torch.float32
+        else:
+            torch_dtype = torch.float32
         # device_map='auto' lets HF place weights on the available accelerator
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
@@ -70,8 +75,11 @@ def generate_one(model_id:str, query:str,
                  use_rag:bool=False,
                  gen_kwargs:Optional[Dict[str,Any]]=None)->Dict[str,Any]:
     tok, model, device = load_model(model_id, adapter_dir, device="auto", quant=None)
-    gen_kwargs = gen_kwargs or {"max_new_tokens":200, "temperature":0.7, "top_p":0.9}
-    gen_kwargs.setdefault("do_sample", True)
+    gen_kwargs = gen_kwargs or {
+        "do_sample": False,
+        "max_new_tokens": 128,
+        "min_new_tokens": 8
+    }
     # Build prompt
     if use_rag and retrieve_topk and compress_to_bullets and build_prompt:
         ctx = retrieve_topk(query, k=3)
@@ -83,9 +91,15 @@ def generate_one(model_id:str, query:str,
 
     ptoks = count_tokens(tok, prompt)
     t0 = time.time()
-    x = tok(prompt, return_tensors="pt").to(model.device)
+    x = tok(prompt, return_tensors="pt", padding=True).to(model.device)
     with torch.inference_mode():
-        y = model.generate(**x, **gen_kwargs)
+        y = model.generate(
+            input_ids=x["input_ids"],
+            attention_mask=x.get("attention_mask"),
+            eos_token_id=tok.eos_token_id,
+            pad_token_id=tok.eos_token_id,
+            **gen_kwargs
+        )
     dt_ms = (time.time()-t0)*1000.0
     out = tok.decode(y[0], skip_special_tokens=True)
 

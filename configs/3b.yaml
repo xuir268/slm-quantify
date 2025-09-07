@@ -1,17 +1,30 @@
-model_id: mistralai/Mistral-7B-Instruct-v0.2  # swap to Qwen/Qwen2-3B-Instruct if OOM
-use_qlora: true
-seq_len: 1024
-batch_size: 1
-eval_batch_size: 1
+model_id: microsoft/Phi-3.5-mini-instruct
+output_dir: results/models/phi35_lora
+max_seq_len: 1024
+epochs: 2
+batch_size: 2
+eval_batch_size: 2
 grad_accum: 8
-epochs: 1
-max_steps: 800
-eval_strategy: "no"
-save_strategy: "epoch"
-output_dir: results/models/mistral_lora
-lora:
-  r: 16
-  alpha: 32
-  dropout: 0.05
-  target_modules: ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
-data: { train: data/processed/train.jsonl, dev: data/processed/dev.jsonl }
+lr: 5e-5
+lr_scheduler: cosine
+warmup_ratio: 0.1
+weight_decay: 0.01
+max_grad_norm: 1.0
+logging_steps: 25
+eval_steps: 200
+save_steps: 200
+save_total_limit: 2
+bf16: true
+fp16: false
+qlora: true
+bnb_4bit: true
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+bnb_compute_dtype: bfloat16
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+bias: "none"
+target_modules: ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
+train_path: data/processed/train.jsonl
+dev_path:   data/processed/dev.jsonl

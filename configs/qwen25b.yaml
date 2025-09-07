@@ -1,8 +1,6 @@
-model_id: microsoft/phi-3-mini-4k-instruct
-output_dir: results/models/phi3_lora_v2
+model_id: Qwen/Qwen2.5-3B-Instruct
+output_dir: results/models/qwen3_lora_v2
 max_seq_len: 1024
-
-# Optim / schedule
 epochs: 2
 batch_size: 2
 eval_batch_size: 2
@@ -16,25 +14,17 @@ logging_steps: 25
 eval_steps: 200
 save_steps: 200
 save_total_limit: 2
-
-# Precision (set one of these true depending on GPU)
 bf16: true
 fp16: false
-
-# QLoRA
 qlora: true
 bnb_4bit: true
 bnb_4bit_use_double_quant: true
 bnb_4bit_quant_type: nf4
 bnb_compute_dtype: bfloat16
-
-# LoRA adapter
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.05
 bias: "none"
 target_modules: ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
-
-# Data
 train_path: data/processed/train.jsonl
 dev_path:   data/processed/dev.jsonl
